@@ -3,54 +3,72 @@
 ## Deployment Architecture
 
 ```
-Vercel (free)           Railway / Render (free)
-─────────────           ───────────────────────────
-Next.js frontend   →    API: FastAPI (port 8000)
-                        Worker: Temporal worker
-                        Temporal server (port 7233)
-                        PostgreSQL (port 5432)
+Vercel (free)           Railway (free/hobby)
+─────────────           ────────────────────
+Next.js frontend   →    API: FastAPI (backend/ root)
+                        Worker: Python Worker (backend/ root)
+                        Temporal: Dev Server (backend/ root)
+                        PostgreSQL: Railway Database Add-on
 ```
 
-All backend services run in a single docker-compose on Railway or Render.
-The Next.js frontend is deployed separately on Vercel.
+To deploy this monorepo successfully, you must configure **separate Railway services** for each component instead of building from the root.
 
 ---
 
-## Option A — Railway (Recommended for POC)
+## Railway Configuration (Backend Setup)
 
-### 1. Create Railway account
-Sign up at https://railway.app (free $5/month credit, no card needed for trial)
+### 1. Database Service
+1. Click **+ New** -> **Database** -> **Add PostgreSQL**.
+2. Note the database connection variables (`DATABASE_URL`).
 
-### 2. Create new project from GitHub
+### 2. Temporal + API Service
+1. Click **+ New** -> **GitHub Repo** -> select `Order-Supervisor-POC`.
+2. Go to **Settings** -> **General** -> **Root Directory** and set it to `backend`.
+3. Set the **Start Command** under Settings to:
+   ```bash
+   uvicorn app.main:app --host 0.0.0.0 --port $PORT
+   ```
+4. Under **Variables**, add:
+   - `GROQ_API_KEY`: `<your_groq_api_key>`
+   - `DATABASE_URL`: `${{Postgres.DATABASE_URL}}` (or reference your Railway Postgres URL)
+   - `TEMPORAL_ADDRESS`: `localhost:7233`
+5. Since Temporal runs locally on the container in simple mode, we need to run both Temporal dev server and the API/worker. 
+   *(Alternatively, configure a startup script `start.sh` in the root directory to run `temporal server start-dev` and `uvicorn` in parallel, or deploy them as separate Railway services).*
+
+---
+
+## Recommended: Monorepo Deployment via Startup Script
+
+To run everything (Temporal Server, Temporal Worker, and FastAPI API) in a single Railway service container, we can add a `start.sh` script in the `backend/` directory:
+
+### [NEW] `backend/start.sh`
 ```bash
-# Push the repo to GitHub first
-cd /path/to/assignment
-git init
-git add .
-git commit -m "Initial commit"
-# Create repo on GitHub, then:
-git remote add origin https://github.com/YOUR_USERNAME/order-supervisor
-git push -u origin main
+#!/bin/bash
+# Start Temporal dev server in the background
+temporal server start-dev --db-filename temporal.db --ip 0.0.0.0 &
+
+# Wait for Temporal server to boot
+sleep 5
+
+# Start Temporal Worker in the background
+python -m app.temporal.worker &
+
+# Start FastAPI API Server in the foreground
+uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
 ```
 
-### 3. Deploy via Railway CLI
-```bash
-npm install -g @railway/cli
-railway login
-railway link   # link to your project
-railway up     # deploy using docker-compose.prod.yml
-```
+Make sure to set the **Root Directory** to `backend` and set the **Start Command** to `bash start.sh`.
 
-### 4. Set environment variables in Railway dashboard:
-```
-GROQ_API_KEY=your_groq_key
-POSTGRES_PASSWORD=your_strong_password
-TEMPORAL_DB_PASSWORD=your_temporal_db_password
-CORS_ORIGINS=https://your-vercel-app.vercel.app
-```
+---
 
-### 5. Note the backend URL
-Railway will give you a URL like `https://order-supervisor-production.up.railway.app`
+## Frontend Deployment — Vercel
+
+### 1. Go to https://vercel.com → New Project → Import your GitHub repo
+### 2. Set **Root Directory** to `frontend`
+### 3. Set Environment Variable:
+   - `NEXT_PUBLIC_API_URL`: `https://your-railway-backend-url.up.railway.app`
+### 4. Deploy!
+
 
 ---
 
