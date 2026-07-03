@@ -103,3 +103,9 @@ async def get_worker_log():
             return {"log": f.read()}
     return {"log": "No worker log found"}
 
+
+@app.get("/debug/env")
+async def get_env():
+    import os
+    return {"env": dict(os.environ)}
+
