@@ -3,7 +3,7 @@
 
 echo "=== Starting Temporal Dev Server ==="
 # Start temporal server in background using the local binary or path
-temporal server start-dev --db-filename temporal.db --ip 0.0.0.0 --ui-port 8080 > /dev/null 2>&1 &
+temporal server start-dev --db-filename temporal.db --ip 0.0.0.0 --ui-port 8082 > /dev/null 2>&1 &
 
 echo "=== Waiting for Temporal Dev Server ==="
 sleep 5

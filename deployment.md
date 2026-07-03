@@ -45,7 +45,7 @@ To run everything (Temporal Server, Temporal Worker, and FastAPI API) in a singl
 ```bash
 #!/bin/bash
 # Start Temporal dev server in the background
-temporal server start-dev --db-filename temporal.db --ip 0.0.0.0 &
+temporal server start-dev --db-filename temporal.db --ip 0.0.0.0 --ui-port 8082 > /dev/null 2>&1 &
 
 # Wait for Temporal server to boot
 sleep 5
