@@ -109,3 +109,13 @@ async def get_env():
     import os
     return {"env": dict(os.environ)}
 
+
+@app.get("/debug/code")
+async def get_code():
+    import os
+    path = "app/temporal/worker.py"
+    if os.path.exists(path):
+        with open(path) as f:
+            return {"code": f.read()}
+    return {"code": "Not found"}
+
