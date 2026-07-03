@@ -119,3 +119,13 @@ async def get_code():
             return {"code": f.read()}
     return {"code": "Not found"}
 
+
+@app.get("/debug/ps")
+async def get_ps():
+    import subprocess
+    try:
+        res = subprocess.check_output(["ps", "aux"], stderr=subprocess.STDOUT, text=True)
+        return {"ps": res}
+    except Exception as e:
+        return {"error": str(e)}
+
