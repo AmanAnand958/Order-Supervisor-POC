@@ -95,45 +95,6 @@ async def list_event_types():
     ]
 
 
-@app.get("/debug/worker-log")
-async def get_worker_log():
-    import os
-    if os.path.exists("worker.log"):
-        with open("worker.log") as f:
-            return {"log": f.read()}
-    return {"log": "No worker log found"}
 
 
-@app.get("/debug/env")
-async def get_env():
-    import os
-    return {"env": dict(os.environ)}
-
-
-@app.get("/debug/code")
-async def get_code():
-    import os
-    path = "app/temporal/worker.py"
-    if os.path.exists(path):
-        with open(path) as f:
-            return {"code": f.read()}
-    return {"code": "Not found"}
-
-
-@app.get("/debug/ps")
-async def get_ps():
-    import os
-    processes = []
-    try:
-        for pid in os.listdir('/proc'):
-            if pid.isdigit():
-                try:
-                    with open(os.path.join('/proc', pid, 'cmdline'), 'rb') as f:
-                        cmd = f.read().replace(b'\x00', b' ').decode('utf-8', errors='ignore')
-                    processes.append({"pid": pid, "cmd": cmd})
-                except Exception:
-                    pass
-        return {"processes": processes}
-    except Exception as e:
-        return {"error": str(e)}
 
