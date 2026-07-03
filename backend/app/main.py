@@ -122,10 +122,18 @@ async def get_code():
 
 @app.get("/debug/ps")
 async def get_ps():
-    import subprocess
+    import os
+    processes = []
     try:
-        res = subprocess.check_output(["ps", "aux"], stderr=subprocess.STDOUT, text=True)
-        return {"ps": res}
+        for pid in os.listdir('/proc'):
+            if pid.isdigit():
+                try:
+                    with open(os.path.join('/proc', pid, 'cmdline'), 'rb') as f:
+                        cmd = f.read().replace(b'\x00', b' ').decode('utf-8', errors='ignore')
+                    processes.append({"pid": pid, "cmd": cmd})
+                except Exception:
+                    pass
+        return {"processes": processes}
     except Exception as e:
         return {"error": str(e)}
 
