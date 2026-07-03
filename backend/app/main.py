@@ -93,3 +93,13 @@ async def list_event_types():
         {"type": "no_update_for_n_hours", "description": "No update for N hours"},
         {"type": "fraud_flag", "description": "Potential fraud detected"},
     ]
+
+
+@app.get("/debug/worker-log")
+async def get_worker_log():
+    import os
+    if os.path.exists("worker.log"):
+        with open("worker.log") as f:
+            return {"log": f.read()}
+    return {"log": "No worker log found"}
+
