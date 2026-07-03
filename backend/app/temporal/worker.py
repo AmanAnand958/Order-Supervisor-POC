@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 TEMPORAL_ADDRESS = os.environ.get("TEMPORAL_ADDRESS", "localhost:7233")
 TEMPORAL_NAMESPACE = os.environ.get("TEMPORAL_NAMESPACE", "default")
-TASK_QUEUE = os.environ.get("TEMPORAL_TASK_QUEUE", "order-supervisor")
+TASK_QUEUE = "order-supervisor"
 
 
 async def run_worker() -> None:
