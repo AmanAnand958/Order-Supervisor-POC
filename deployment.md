@@ -26,11 +26,11 @@ To deploy this monorepo successfully, you must configure **separate Railway serv
 2. Go to **Settings** -> **General** -> **Root Directory** and set it to `backend`.
 3. Set the **Start Command** under Settings to:
    ```bash
-   uvicorn app.main:app --host 0.0.0.0 --port $PORT
+   bash start.sh
    ```
 4. Under **Variables**, add:
    - `GROQ_API_KEY`: `<your_groq_api_key>`
-   - `DATABASE_URL`: `${{Postgres.DATABASE_URL}}` (or reference your Railway Postgres URL)
+   - `DATABASE_URL`: `postgresql://postgres:wUEtxUfnObKtjLLgEzANYjpNvIuZKeTA@postgres.railway.internal:5432/railway`
    - `TEMPORAL_ADDRESS`: `localhost:7233`
 5. Since Temporal runs locally on the container in simple mode, we need to run both Temporal dev server and the API/worker. 
    *(Alternatively, configure a startup script `start.sh` in the root directory to run `temporal server start-dev` and `uvicorn` in parallel, or deploy them as separate Railway services).*
