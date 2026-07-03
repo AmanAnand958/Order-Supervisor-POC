@@ -1,0 +1,2 @@
+limit-interval: 1000
+limit-per-second: 1000

@@ -1,0 +1,53 @@
+INFO:     Started server process [44679]
+INFO:     Waiting for application startup.
+INFO:app.main:Connecting to database...
+INFO:app.main:Database connected.
+INFO:app.main:Connecting to Temporal at localhost:7233...
+INFO:app.main:Temporal connected.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:51368 - "OPTIONS /api/supervisors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51369 - "OPTIONS /api/supervisors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51368 - "GET /api/supervisors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51369 - "GET /api/supervisors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51373 - "OPTIONS /api/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51375 - "OPTIONS /api/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51374 - "GET /api/supervisors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51373 - "GET /api/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51375 - "GET /api/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51376 - "GET /api/supervisors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51383 - "POST /api/runs HTTP/1.1" 201 Created
+INFO:     127.0.0.1:51383 - "OPTIONS /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "OPTIONS /api/event-types HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51394 - "OPTIONS /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51395 - "OPTIONS /api/event-types HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "GET /api/event-types HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51395 - "GET /api/event-types HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51394 - "GET /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51383 - "GET /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "GET /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "GET /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "GET /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "GET /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "GET /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "GET /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "GET /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "GET /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "OPTIONS /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "POST /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508/events HTTP/1.1" 202 Accepted
+INFO:     127.0.0.1:51393 - "GET /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "GET /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "GET /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "GET /api/runs/13d39e05-c88c-45e4-816a-e8ae4f62a508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "GET /api/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51403 - "GET /api/supervisors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51404 - "GET /api/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51405 - "GET /api/supervisors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "GET /api/supervisors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51403 - "GET /api/supervisors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51404 - "GET /api/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51405 - "GET /api/supervisors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51393 - "GET /api/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51403 - "GET /api/supervisors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51404 - "GET /api/supervisors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51405 - "GET /api/supervisors HTTP/1.1" 200 OK
