@@ -5,31 +5,51 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { api, RunDetail, EventType, TimelineEvent } from "@/lib/api";
 
-const STATUS_COLORS: Record<string, string> = {
-  active: "bg-green-900/40 text-green-300 border-green-800",
-  paused: "bg-yellow-900/40 text-yellow-300 border-yellow-800",
-  completed: "bg-blue-900/40 text-blue-300 border-blue-800",
-  terminated: "bg-gray-700/40 text-gray-300 border-gray-600",
-  error: "bg-red-900/40 text-red-300 border-red-800",
+const STATUS_COLORS: Record<string, { badge: string; text: string; dot: string }> = {
+  active: {
+    badge: "bg-green-500/10 border-green-500/20 text-green-400 shadow-sm shadow-green-500/10",
+    text: "text-green-400",
+    dot: "bg-green-500",
+  },
+  paused: {
+    badge: "bg-yellow-500/10 border-yellow-500/20 text-yellow-400 shadow-sm shadow-yellow-500/10",
+    text: "text-yellow-400",
+    dot: "bg-yellow-500",
+  },
+  completed: {
+    badge: "bg-blue-500/10 border-blue-500/20 text-blue-400 shadow-sm shadow-blue-500/10",
+    text: "text-blue-400",
+    dot: "bg-blue-500",
+  },
+  terminated: {
+    badge: "bg-gray-500/10 border-gray-500/20 text-gray-400",
+    text: "text-gray-400",
+    dot: "bg-gray-450",
+  },
+  error: {
+    badge: "bg-red-500/10 border-red-500/20 text-red-400 shadow-sm shadow-red-500/10",
+    text: "text-red-400",
+    dot: "bg-red-500",
+  },
 };
 
 const EVENT_ICONS: Record<string, string> = {
   order_created: "🛍️",
-  payment_confirmed: "✅",
+  payment_confirmed: "💳",
   payment_failed: "❌",
   shipment_created: "📦",
-  shipment_delayed: "⚠️",
+  shipment_delayed: "⏳",
   shipment_lost: "🔍",
   out_for_delivery: "🚚",
   delivered: "🎉",
   refund_requested: "↩️",
-  refund_approved: "💚",
+  refund_approved: "✅",
   refund_rejected: "🚫",
   customer_message_received: "💬",
-  customer_complaint_filed: "📢",
+  customer_complaint_filed: "🚨",
   order_cancelled: "🗑️",
   order_modified: "✏️",
-  fraud_flag: "🚨",
+  fraud_flag: "⚠️",
   no_update_for_n_hours: "⏰",
   agent_turn: "🤖",
   "tool:send_customer_message": "📧",
@@ -46,40 +66,67 @@ function TimelineEntry({ event }: { event: TimelineEvent }) {
   const isAgent = event.source === "agent";
 
   return (
-    <div
-      className={`flex gap-3 py-3 border-b border-gray-800/50 last:border-0 ${
-        isAgent ? "opacity-90" : ""
-      }`}
-    >
-      <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm bg-gray-800 border border-gray-700">
+    <div className={`relative flex gap-4 pl-6 pb-6 last:pb-0 group transition-opacity duration-300 ${
+      isAgent ? "opacity-95" : ""
+    }`}>
+      {/* Visual vertical timeline connector */}
+      <div className="absolute left-[11px] top-7 bottom-0 w-[2px] bg-gray-800 group-last:hidden" />
+      
+      {/* Icon shell */}
+      <div className={`absolute left-0 top-1 w-6 h-6 rounded-full flex items-center justify-center text-xs bg-gray-900 border transition-all duration-200 ${
+        isAgent 
+          ? "border-purple-500/40 shadow-sm shadow-purple-500/20" 
+          : event.source === "user" 
+          ? "border-blue-500/30" 
+          : "border-gray-850"
+      }`}>
         {icon}
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <span className={`text-xs font-medium ${isAgent ? "text-purple-300" : "text-blue-300"}`}>
-            {event.type}
-          </span>
-          <span className={`text-xs px-1.5 py-0.5 rounded text-gray-500 bg-gray-800`}>
-            {event.source}
-          </span>
-          <span className="text-xs text-gray-600 ml-auto flex-shrink-0">
-            {new Date(event.created_at).toLocaleTimeString()}
+
+      <div className="flex-1 bg-gray-900/30 border border-gray-850/60 rounded-xl p-4 space-y-2 hover:border-gray-800 transition-colors">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className={`text-xs font-bold font-mono tracking-wide ${
+              isAgent ? "text-purple-400" : "text-blue-400"
+            }`}>
+              {event.type.replace("tool:", "")}
+            </span>
+            <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+              isAgent 
+                ? "bg-purple-500/10 text-purple-400" 
+                : event.source === "user" 
+                ? "bg-blue-500/10 text-blue-400" 
+                : "bg-gray-800 text-gray-400"
+            }`}>
+              {event.source}
+            </span>
+          </div>
+          <span className="text-[10px] text-gray-500 font-mono">
+            {new Date(event.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </span>
         </div>
 
         {event.type === "agent_turn" && !!event.payload.reasoning && (
-          <p className="text-sm text-gray-300 mb-1">{String(event.payload.reasoning)}</p>
+          <p className="text-sm text-gray-300 leading-relaxed font-light">{String(event.payload.reasoning)}</p>
+        )}
+
+        {event.type.startsWith("tool:") && !!event.payload.result && (
+          <div className="text-xs bg-gray-950/60 border border-gray-900 p-2.5 rounded-lg font-mono text-gray-400">
+            {typeof event.payload.result === "string" 
+              ? event.payload.result 
+              : String((event.payload.result as Record<string, unknown>).note || JSON.stringify(event.payload.result))}
+          </div>
         )}
 
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
+          className="text-[10px] font-mono text-gray-500 hover:text-gray-300 cursor-pointer block select-none"
         >
-          {expanded ? "hide payload ▲" : "show payload ▼"}
+          {expanded ? "[hide payload]" : "[view payload]"}
         </button>
 
         {expanded && (
-          <pre className="mt-2 text-xs bg-gray-800 rounded p-2 overflow-auto text-gray-400 max-h-48">
+          <pre className="text-[10px] bg-gray-950 border border-gray-900 rounded-xl p-3 overflow-auto text-gray-400 max-h-48 font-mono">
             {JSON.stringify(event.payload, null, 2)}
           </pre>
         )}
@@ -95,7 +142,7 @@ function CountdownTimer({ targetIso }: { targetIso: string }) {
     function update() {
       const diff = new Date(targetIso).getTime() - Date.now();
       if (diff <= 0) {
-        setRemaining("now");
+        setRemaining("Now");
         return;
       }
       const m = Math.floor(diff / 60000);
@@ -107,7 +154,7 @@ function CountdownTimer({ targetIso }: { targetIso: string }) {
     return () => clearInterval(id);
   }, [targetIso]);
 
-  return <span>{remaining}</span>;
+  return <span className="font-mono text-white font-bold">{remaining}</span>;
 }
 
 export default function RunDetailPage() {
@@ -209,7 +256,7 @@ export default function RunDetailPage() {
       if (action === "interrupt") await api.runs.interrupt(runId);
       else if (action === "resume") await api.runs.resume(runId);
       else await api.runs.terminate(runId);
-      setControlMsg(`✓ ${action} signal sent`);
+      setControlMsg(`✓ ${action} completed`);
       setTimeout(() => { setControlMsg(null); loadRun(); }, 2000);
     } catch (e: unknown) {
       setControlMsg(`Error: ${e instanceof Error ? e.message : "Unknown"}`);
@@ -218,8 +265,8 @@ export default function RunDetailPage() {
     }
   }
 
-  if (loading) return <div className="text-center text-gray-500 py-16">Loading...</div>;
-  if (error) return <div className="text-center text-red-400 py-16">{error}</div>;
+  if (loading) return <div className="text-center text-gray-500 py-20 font-light">Loading telemetry...</div>;
+  if (error) return <div className="text-center text-red-400 py-20 font-light">{error}</div>;
   if (!run) return null;
 
   const isActive = run.status === "active";
@@ -227,36 +274,37 @@ export default function RunDetailPage() {
   const isDone = ["completed", "terminated"].includes(run.status);
   const liveStatus = run.workflow_status ?? run.status;
   const nextWake = run.workflow_next_wake_at ?? run.next_wake_at;
+  const statusCfg = STATUS_COLORS[liveStatus] ?? STATUS_COLORS.error;
 
   return (
-    <div className="max-w-6xl">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/runs" className="text-gray-500 hover:text-gray-300 text-sm">← Runs</Link>
-        <span className="text-gray-700">/</span>
-        <span className="font-mono text-sm text-gray-400">Order #{run.order_id}</span>
-        <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${STATUS_COLORS[liveStatus] ?? STATUS_COLORS.error}`}>
+    <div className="space-y-6">
+      {/* Header breadcrumb bar */}
+      <div className="flex items-center gap-2.5 border-b border-gray-800/60 pb-5">
+        <Link href="/runs" className="text-gray-400 hover:text-white text-sm font-semibold transition-colors">Runs</Link>
+        <span className="text-gray-700 font-mono text-sm">/</span>
+        <span className="font-mono text-sm text-gray-300 font-semibold">Order #{run.order_id}</span>
+        <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${statusCfg.badge}`}>
           {liveStatus}
         </span>
         {!isDone && (
-          <span className="ml-auto text-xs text-gray-500 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block animate-pulse" />
-            polling…
+          <span className="ml-auto text-[10px] text-gray-500 flex items-center gap-1.5 font-semibold uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block animate-pulse shadow-sm shadow-blue-500" />
+            Live Monitoring
           </span>
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
-        {/* Left: Timeline */}
-        <div className="col-span-2">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
-              <h2 className="font-semibold text-white">Timeline</h2>
-              <span className="text-xs text-gray-500">{run.timeline.length} events</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left pane: Operations Timeline & Final Summary */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-gray-900/30 border border-gray-800/80 rounded-2xl p-5 md:p-6 space-y-5">
+            <div className="flex items-center justify-between border-b border-gray-800/60 pb-4">
+              <h2 className="font-bold text-lg text-white">Execution Timeline</h2>
+              <span className="text-xs text-gray-500 font-mono">{run.timeline.length} events logged</span>
             </div>
-            <div className="max-h-[600px] overflow-y-auto px-5 py-2">
+            <div className="max-h-[650px] overflow-y-auto pr-2 space-y-1">
               {run.timeline.length === 0 ? (
-                <p className="text-center text-gray-600 py-8 text-sm">No events yet</p>
+                <p className="text-center text-gray-500 py-10 font-light text-sm">Waiting for first execution event...</p>
               ) : (
                 run.timeline.map((ev) => <TimelineEntry key={ev.id} event={ev} />)
               )}
@@ -264,195 +312,216 @@ export default function RunDetailPage() {
             </div>
           </div>
 
-          {/* Final Output */}
+          {/* Final Summary Card */}
           {run.final_output && (
-            <div className="mt-6 bg-gray-900 border border-blue-800/50 rounded-xl p-5">
-              <h2 className="font-semibold text-blue-300 mb-3">🏁 Final Summary</h2>
-              <p className="text-sm text-gray-300 mb-4">{run.final_output.summary}</p>
+            <div className="bg-gradient-to-r from-blue-950/20 to-indigo-950/20 border border-blue-500/30 rounded-2xl p-6 space-y-6 glow-primary">
+              <div className="border-b border-blue-500/20 pb-4 flex items-center justify-between">
+                <h2 className="font-bold text-xl text-blue-300">🏁 Final Summary & Analysis</h2>
+                <span className="text-[10px] uppercase font-mono tracking-wider text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-md border border-blue-500/20">Outcome Report</span>
+              </div>
+              
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold text-blue-400/80 uppercase tracking-wider font-mono">Overview</span>
+                <p className="text-sm text-gray-200 leading-relaxed font-light">{run.final_output.summary}</p>
+              </div>
 
               {run.final_output.actions_taken?.length > 0 && (
-                <div className="mb-4">
-                  <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Actions Taken</h3>
-                  <ul className="space-y-1">
-                    {run.final_output.actions_taken.map((a, i) => (
-                      <li key={i} className="text-sm text-gray-300">
-                        • {typeof a === "string" ? a : a.action}
-                        {typeof a !== "string" && a.outcome && (
-                          <span className="text-gray-500"> — {a.outcome}</span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                <div className="space-y-3">
+                  <span className="text-[10px] font-bold text-blue-400/80 uppercase tracking-wider font-mono">Actions Executed</span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {run.final_output.actions_taken.map((a, i) => {
+                      const actionDesc = typeof a === "string" ? a : a.action;
+                      const outcome = typeof a !== "string" ? a.outcome : null;
+                      return (
+                        <div key={i} className="bg-gray-950/60 border border-blue-500/10 p-3 rounded-xl flex flex-col justify-between">
+                          <span className="text-xs text-gray-200 font-light">{actionDesc}</span>
+                          {outcome && (
+                            <span className="text-[10px] text-blue-400 font-mono mt-1 pt-1.5 border-t border-gray-900">{outcome}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
-              {run.final_output.learnings && (
-                <div className="mb-4">
-                  <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Learnings</h3>
-                  <p className="text-sm text-gray-300">{run.final_output.learnings}</p>
-                </div>
-              )}
-
-              {run.final_output.recommendations && (
-                <div>
-                  <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Recommendations</h3>
-                  <p className="text-sm text-gray-300">{run.final_output.recommendations}</p>
-                </div>
-              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                {run.final_output.learnings && (
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-blue-400/80 uppercase tracking-wider font-mono">Key Learnings</span>
+                    <p className="text-xs text-gray-300 font-light leading-relaxed bg-gray-950/40 border border-blue-500/5 p-3 rounded-xl">{run.final_output.learnings}</p>
+                  </div>
+                )}
+                {run.final_output.recommendations && (
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-blue-400/80 uppercase tracking-wider font-mono">Recommendations</span>
+                    <p className="text-xs text-gray-300 font-light leading-relaxed bg-gray-950/40 border border-blue-500/5 p-3 rounded-xl">{run.final_output.recommendations}</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
 
-        {/* Right: Controls */}
-        <div className="space-y-5">
-          {/* Status Panel */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <h3 className="text-sm font-semibold text-gray-300 mb-3">Status</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Status</span>
-                <span className="text-white font-medium">{liveStatus}</span>
+        {/* Right pane: Control Panel, Directives & State variables */}
+        <div className="space-y-6">
+          {/* Global State metrics */}
+          <div className="bg-gray-900/30 border border-gray-800 rounded-2xl p-5 md:p-6 space-y-4">
+            <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-800 pb-2">Supervisor State</h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Telemetry Status</span>
+                <span className={`text-xs px-2.5 py-0.5 rounded-full border font-bold uppercase tracking-wider ${statusCfg.badge}`}>
+                  {liveStatus}
+                </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Turns</span>
-                <span className="text-white">{run.turn_count}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Wake Cycles</span>
+                <span className="text-white font-bold font-mono">{run.turn_count} turns</span>
               </div>
               {nextWake && !isDone && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Next wake</span>
-                  <span className="text-white">
-                    <CountdownTimer targetIso={nextWake} />
-                  </span>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Next Scheduled Wake</span>
+                  <CountdownTimer targetIso={nextWake} />
                 </div>
               )}
             </div>
 
-            {/* Memory Summary */}
+            {/* Compact Memory display */}
             {run.memory_summary && (
-              <div className="mt-3 pt-3 border-t border-gray-800">
-                <p className="text-xs font-medium text-gray-500 mb-1">Memory</p>
-                <p className="text-xs text-gray-400 leading-relaxed">{run.memory_summary}</p>
+              <div className="pt-4 border-t border-gray-800/80 space-y-2">
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Active Memory Context</span>
+                <p className="text-xs text-gray-300 leading-relaxed font-light bg-gray-950/50 border border-gray-900 p-3.5 rounded-xl">{run.memory_summary}</p>
               </div>
             )}
           </div>
 
-          {/* Control Buttons */}
+          {/* Action Execution Controls */}
           {!isDone && (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-gray-300 mb-3">Controls</h3>
+            <div className="bg-gray-900/30 border border-gray-800 rounded-2xl p-5 md:p-6 space-y-4">
+              <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-800 pb-2">Manual Interventions</h3>
+              
               {controlMsg && (
-                <p className={`text-xs mb-2 ${controlMsg.startsWith("Error") ? "text-red-400" : "text-green-400"}`}>
+                <div className={`p-3 rounded-xl border text-xs font-medium ${
+                  controlMsg.startsWith("Error") 
+                    ? "bg-red-500/10 border-red-500/20 text-red-400" 
+                    : "bg-green-500/10 border-green-500/20 text-green-400"
+                }`}>
                   {controlMsg}
-                </p>
+                </div>
               )}
-              <div className="space-y-2">
+
+              <div className="grid grid-cols-1 gap-2.5">
                 {isActive && (
                   <button
                     onClick={() => control("interrupt")}
                     disabled={controlling}
-                    className="w-full py-2 bg-yellow-900/30 hover:bg-yellow-900/50 border border-yellow-800 text-yellow-300 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                    className="w-full py-3 bg-yellow-500/5 hover:bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 rounded-xl text-xs font-bold transition-all disabled:opacity-50 hover:-translate-y-0.5 cursor-pointer"
                   >
-                    ⏸ Pause (Interrupt)
+                    ⏸ Pause Execution
                   </button>
                 )}
                 {isPaused && (
                   <button
                     onClick={() => control("resume")}
                     disabled={controlling}
-                    className="w-full py-2 bg-green-900/30 hover:bg-green-900/50 border border-green-800 text-green-300 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                    className="w-full py-3 bg-green-500/5 hover:bg-green-500/10 border border-green-500/20 text-green-400 rounded-xl text-xs font-bold transition-all disabled:opacity-50 hover:-translate-y-0.5 cursor-pointer"
                   >
-                    ▶ Resume
+                    ▶ Resume Execution
                   </button>
                 )}
                 <button
                   onClick={() => {
-                    if (confirm("Terminate this run? This will trigger the final summary.")) {
+                    if (confirm("Force terminate this run? This will prompt final LLM summary generation.")) {
                       control("terminate");
                     }
                   }}
                   disabled={controlling}
-                  className="w-full py-2 bg-red-900/30 hover:bg-red-900/50 border border-red-800 text-red-300 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                  className="w-full py-3 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold transition-all disabled:opacity-50 hover:-translate-y-0.5 cursor-pointer"
                 >
-                  🛑 Terminate
+                  🛑 Force Terminate Run
                 </button>
               </div>
             </div>
           )}
 
-          {/* Event Injection */}
+          {/* Event Injection Node */}
           {!isDone && (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-gray-300 mb-3">Inject Event</h3>
-              <form onSubmit={sendEvent} className="space-y-3">
+            <div className="bg-gray-900/30 border border-gray-800 rounded-2xl p-5 md:p-6 space-y-4">
+              <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-800 pb-2">Inject Telemetry Event</h3>
+              <form onSubmit={sendEvent} className="space-y-4">
                 {eventError && (
                   <p className="text-xs text-red-400">{eventError}</p>
                 )}
-                <select
-                  value={selectedEvent}
-                  onChange={(e) => setSelectedEvent(e.target.value)}
-                  required
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-blue-500"
-                >
-                  <option value="">Select event type…</option>
-                  {eventTypes.map((et) => (
-                    <option key={et.type} value={et.type}>
-                      {EVENT_ICONS[et.type] ?? "📌"} {et.type}
-                    </option>
-                  ))}
-                </select>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Payload (JSON)</label>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Event Schema Type</label>
+                  <select
+                    value={selectedEvent}
+                    onChange={(e) => setSelectedEvent(e.target.value)}
+                    required
+                    className="w-full bg-gray-950 border border-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3 py-2.5 text-white text-xs font-medium transition-all"
+                  >
+                    <option value="">Select event...</option>
+                    {eventTypes.map((et) => (
+                      <option key={et.type} value={et.type}>
+                        {et.type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Payload Parameters (JSON)</label>
                   <textarea
                     value={eventPayloadStr}
                     onChange={(e) => setEventPayloadStr(e.target.value)}
                     rows={3}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-xs font-mono focus:outline-none focus:border-blue-500"
+                    className="w-full bg-gray-950 border border-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3 py-2.5 text-white text-xs font-mono transition-all"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={sendingEvent}
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition-colors"
+                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-500/25 transition-all"
                 >
-                  {sendingEvent ? "Sending…" : "Send Event →"}
+                  {sendingEvent ? "Sending..." : "Inject Event Signal →"}
                 </button>
               </form>
             </div>
           )}
 
-          {/* Add Instruction */}
+          {/* Add Operator Instructions */}
           {!isDone && (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-gray-300 mb-3">Add Instruction</h3>
+            <div className="bg-gray-900/30 border border-gray-800 rounded-2xl p-5 md:p-6 space-y-4">
+              <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-800 pb-2">Directives & Instructions</h3>
               <form onSubmit={sendInstruction} className="space-y-3">
                 <textarea
                   value={instructionText}
                   onChange={(e) => setInstructionText(e.target.value)}
                   required
                   rows={3}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-blue-500"
-                  placeholder="e.g. Prioritize customer communication for this order"
+                  className="w-full bg-gray-950 border border-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3 py-2.5 text-white text-xs transition-all"
+                  placeholder="Inject runtime agent instruction (e.g. Prioritize communication, change escalation threshold)..."
                 />
                 <button
                   type="submit"
                   disabled={sendingInstruction}
-                  className="w-full py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition-colors"
+                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-lg shadow-purple-500/25 transition-all"
                 >
-                  {sendingInstruction ? "Sending…" : "Add Instruction →"}
+                  {sendingInstruction ? "Sending..." : "Send Directive →"}
                 </button>
               </form>
             </div>
           )}
 
-          {/* Extra instructions list */}
+          {/* Directives History */}
           {run.extra_instructions?.length > 0 && (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-gray-300 mb-2">Instructions</h3>
-              <ul className="space-y-1">
+            <div className="bg-gray-900/30 border border-gray-800 rounded-2xl p-5 md:p-6 space-y-3">
+              <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-800 pb-2">Active Directives</h3>
+              <ul className="space-y-2">
                 {run.extra_instructions.map((i, idx) => (
-                  <li key={idx} className="text-xs text-gray-400 flex gap-1">
-                    <span className="text-purple-500">•</span>
-                    {i}
+                  <li key={idx} className="text-xs text-gray-300 flex items-start gap-2 bg-gray-950/40 border border-gray-900 p-2.5 rounded-lg">
+                    <span className="text-purple-400 font-bold font-mono select-none">•</span>
+                    <span className="font-light">{i}</span>
                   </li>
                 ))}
               </ul>

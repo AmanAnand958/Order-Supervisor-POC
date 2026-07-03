@@ -18,3 +18,11 @@
  GET /supervisors 200 in 39ms (next.js: 6ms, application-code: 33ms)
  GET /runs 200 in 22ms (next.js: 5ms, application-code: 17ms)
  GET /supervisors 200 in 32ms (next.js: 5ms, application-code: 27ms)
+✓ Compiled in 571ms
+✓ Compiled in 127ms
+✓ Compiled in 87ms
+✓ Compiled in 117ms
+✓ Compiled in 316ms
+✓ Compiled in 343ms
+✓ Compiled in 415ms
+✓ Compiled in 103ms
