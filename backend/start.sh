@@ -8,6 +8,9 @@ temporal server start-dev --db-filename temporal.db --ip 0.0.0.0 --ui-port 8082 
 echo "=== Waiting for Temporal Dev Server ==="
 sleep 5
 
+echo "=== Running Database Migrations ==="
+python -m app.migrate
+
 echo "=== Starting Temporal Worker ==="
 python -m app.temporal.worker > /dev/null 2>&1 &
 
