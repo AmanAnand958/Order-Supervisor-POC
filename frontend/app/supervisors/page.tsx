@@ -78,6 +78,7 @@ export default function SupervisorsPage() {
   const [model, setModel] = useState("llama-3.3-70b-versatile");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
     loadSupervisors();
@@ -119,6 +120,8 @@ export default function SupervisorsPage() {
       setSelectedTools(AVAILABLE_TOOLS);
       setAggressiveness("medium");
       setIntervalMinutes(60);
+      setSuccessMsg(`Supervisor "${name}" created successfully`);
+      setTimeout(() => setSuccessMsg(null), 4000);
       await loadSupervisors();
     } catch (e: unknown) {
       setFormError(e instanceof Error ? e.message : "Failed to create supervisor");
@@ -141,6 +144,12 @@ export default function SupervisorsPage() {
           {showCreate ? "Close Panel" : "Create Supervisor"}
         </button>
       </div>
+
+      {successMsg && (
+        <div className="p-4 bg-green-900/20 border border-green-700/30 rounded-xl text-green-400 text-sm">
+          {successMsg}
+        </div>
+      )}
 
       {showCreate && (
         <form
@@ -276,9 +285,9 @@ export default function SupervisorsPage() {
       {loading ? (
         <div className="text-center text-gray-500 py-20 font-light">Loading supervisors...</div>
       ) : error ? (
-        <div className="text-center text-red-400 py-20 border border-red-500/10 rounded-2xl bg-red-950/10">
+        <div className="text-center text-red-400 py-20 border border-red-500/10 rounded-2xl bg-red-950/10 space-y-3">
           <p>{error}</p>
-          <p className="text-xs text-gray-500 mt-2 font-mono">Uvicorn API server might not be running on localhost:8000</p>
+          <button onClick={loadSupervisors} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-all">Retry</button>
         </div>
       ) : supervisors.length === 0 ? (
         <div className="text-center py-20 border border-dashed border-gray-800 rounded-2xl space-y-3">
