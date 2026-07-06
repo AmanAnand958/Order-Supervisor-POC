@@ -140,3 +140,9 @@ VALUES
     '{"model": "llama-3.3-70b-versatile", "temperature": 0.2, "max_tokens": 1024}'
 )
 ON CONFLICT (name) DO NOTHING;
+
+-- Backfill event_types for existing supervisors that have empty event_types
+UPDATE supervisors SET event_types = '["order_created", "payment_confirmed", "payment_failed", "shipment_created", "shipment_delayed", "out_for_delivery", "delivered", "customer_message_received"]' WHERE name = 'Standard Order Supervisor' AND event_types = '[]';
+UPDATE supervisors SET event_types = '["order_created", "payment_confirmed", "payment_failed", "shipment_created", "shipment_delayed", "shipment_lost", "fraud_flag", "customer_message_received"]' WHERE name = 'High-Priority Supervisor' AND event_types = '[]';
+UPDATE supervisors SET event_types = '["refund_requested", "refund_approved", "refund_rejected", "customer_complaint_filed", "customer_message_received", "order_cancelled"]' WHERE name = 'Returns Supervisor' AND event_types = '[]';
+UPDATE supervisors SET event_types = '["order_created", "payment_confirmed", "payment_failed", "shipment_created", "shipment_delayed", "shipment_lost", "delivered", "customer_message_received", "customer_complaint_filed", "fraud_flag"]' WHERE name = 'VIP Customer Supervisor' AND event_types = '[]';
