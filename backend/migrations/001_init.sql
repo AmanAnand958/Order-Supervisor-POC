@@ -93,7 +93,7 @@ CREATE TRIGGER runs_updated_at
 -- ─────────────────────────────────────────────
 DELETE FROM supervisors
 WHERE id NOT IN (
-    SELECT MIN(id) FROM supervisors GROUP BY name
+    SELECT (array_agg(id ORDER BY created_at ASC))[1] FROM supervisors GROUP BY name
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS supervisors_name_idx ON supervisors(name);
