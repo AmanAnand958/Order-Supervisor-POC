@@ -49,6 +49,13 @@ EVENT_SEVERITY: dict[str, Severity] = {
     "__default__": Severity.LOW,
 }
 
+# Terminal events — order lifecycle is complete, no more wake-ups needed
+TERMINAL_EVENTS: set[str] = {
+    "delivered",
+    "order_cancelled",
+    "order_completed",
+}
+
 # Aggressiveness levels and which severities they immediately wake on
 AGGRESSIVENESS_WAKE_THRESHOLD: dict[str, set[Severity]] = {
     "high":   {Severity.CRITICAL, Severity.HIGH, Severity.MEDIUM},

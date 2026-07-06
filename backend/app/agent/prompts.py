@@ -33,6 +33,7 @@ Rules:
 - next_wake_minutes: how many minutes until you want to be woken again (min 5, max 1440)
 - close_workflow: true only when the order lifecycle is definitively complete or terminated
 - close_reason: required only when close_workflow is true
+- TERMINAL EVENTS: If you see "delivered", "order_cancelled", or "order_completed" in the timeline, set close_workflow=true and close_reason to describe why the order is complete. Do NOT schedule another wake-up for terminal events.
 
 Available tools:
 {available_tools}

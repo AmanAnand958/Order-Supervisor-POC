@@ -29,7 +29,7 @@ with workflow.unsafe.imports_passed_through():
         run_agent_turn,
         update_run_state,
     )
-    from app.agent.classifier import classify_event, classify_instruction
+    from app.agent.classifier import classify_event, classify_instruction, TERMINAL_EVENTS
 
 logger = logging.getLogger(__name__)
 
@@ -179,20 +179,30 @@ class OrderSupervisorWorkflow:
 
             # ── Timer fired → always run agent ──
             if timer_fired:
-                await self._flush_pending_events(wake=False)
+                has_important, terminal_event = await self._flush_pending_events(wake=False)
+                if terminal_event:
+                    await self._do_terminate(f"terminal_event:{terminal_event}")
+                    break
                 await self._agent_turn(trigger="scheduled_wakeup")
                 continue
 
             # ── Signal received ──
             # First flush any pending events with classification
-            important = await self._flush_pending_events(wake=True)
+            has_important, terminal_event = await self._flush_pending_events(wake=True)
+
+            # Terminal event → run one final agent turn then terminate
+            if terminal_event:
+                if not self._paused:
+                    await self._agent_turn(trigger="signal")
+                await self._do_terminate(f"terminal_event:{terminal_event}")
+                break
 
             # Flush pending instructions (always wake)
             if self._pending_instructions:
                 if not self._paused:
                     await self._agent_turn(trigger="signal")
                 self._pending_instructions.clear()
-            elif important and not self._paused:
+            elif has_important and not self._paused:
                 await self._agent_turn(trigger="signal")
 
             # continue_as_new to keep history size bounded
@@ -212,13 +222,14 @@ class OrderSupervisorWorkflow:
     # Private helpers
     # ─────────────────────────────────────────
 
-    async def _flush_pending_events(self, wake: bool) -> bool:
+    async def _flush_pending_events(self, wake: bool) -> tuple[bool, str | None]:
         """
         Process all pending events. Persist each to DB.
-        Returns True if any event is important enough to wake the agent
-        (only checked when wake=True).
+        Returns (has_important, terminal_event_type) where terminal_event_type
+        is set if a terminal event (delivered, order_cancelled) was received.
         """
         has_important = False
+        terminal_event = None
         while self._pending_events:
             ev = self._pending_events.pop(0)
             classification = classify_event(ev.event_type, self._aggressiveness)
@@ -244,10 +255,13 @@ class OrderSupervisorWorkflow:
                 "severity": classification.severity.value,
             })
 
+            if ev.event_type in TERMINAL_EVENTS:
+                terminal_event = ev.event_type
+
             if wake and classification.should_wake:
                 has_important = True
 
-        return has_important
+        return has_important, terminal_event
 
     async def _agent_turn(self, trigger: str) -> None:
         """Run one agent turn (via activity). Handle its output."""
