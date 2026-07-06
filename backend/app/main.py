@@ -50,7 +50,7 @@ app = FastAPI(
 # CORS — allow Next.js dev server and production frontend
 CORS_ORIGINS = os.environ.get(
     "CORS_ORIGINS",
-    "http://localhost:3000,http://localhost:3001",
+    "http://localhost:3000,http://localhost:3001,https://order-supervisor-poc.vercel.app",
 ).split(",")
 
 app.add_middleware(
