@@ -24,7 +24,7 @@ const STATUS_COLORS: Record<string, { badge: string; text: string; dot: string }
   terminated: {
     badge: "bg-gray-500/10 border-gray-500/20 text-gray-400",
     text: "text-gray-400",
-    dot: "bg-gray-450",
+    dot: "bg-gray-400",
   },
   error: {
     badge: "bg-red-500/10 border-red-500/20 text-red-400 shadow-sm shadow-red-500/10",
@@ -167,11 +167,11 @@ function ToolCallCard({ event }: { event: TimelineEvent }) {
   return (
     <div className="relative flex gap-4 pl-6 pb-6 last:pb-0 group">
       <div className="absolute left-[11px] top-7 bottom-0 w-[2px] bg-gray-800 group-last:hidden" />
-      <div className="absolute left-0 top-1 w-6 h-6 rounded-full flex items-center justify-center text-xs bg-gray-900 border border-gray-850">
+      <div className="absolute left-0 top-1 w-6 h-6 rounded-full flex items-center justify-center text-xs bg-gray-900 border border-gray-800">
         {info.icon}
       </div>
 
-      <div className="flex-1 bg-gray-900/30 border border-gray-850/60 rounded-xl p-4 space-y-2 hover:border-gray-800 transition-colors">
+      <div className="flex-1 bg-gray-900/30 border border-gray-800/60 rounded-xl p-4 space-y-2 hover:border-gray-800 transition-colors">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-blue-400 font-mono">{info.icon} {info.label}</span>
@@ -241,12 +241,12 @@ function TimelineEntry({ event }: { event: TimelineEvent }) {
           ? "border-purple-500/40 shadow-sm shadow-purple-500/20" 
           : event.source === "user" 
           ? "border-blue-500/30" 
-          : "border-gray-850"
+          : "border-gray-800"
       }`}>
         {icon}
       </div>
 
-      <div className="flex-1 bg-gray-900/30 border border-gray-850/60 rounded-xl p-4 space-y-2 hover:border-gray-800 transition-colors">
+      <div className="flex-1 bg-gray-900/30 border border-gray-800/60 rounded-xl p-4 space-y-2 hover:border-gray-800 transition-colors">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className={`text-xs font-bold font-mono tracking-wide ${
@@ -326,6 +326,7 @@ export default function RunDetailPage() {
   // Instruction form
   const [instructionText, setInstructionText] = useState("");
   const [sendingInstruction, setSendingInstruction] = useState(false);
+  const [instructionError, setInstructionError] = useState<string | null>(null);
 
   // Control buttons
   const [controlling, setControlling] = useState(false);
@@ -393,13 +394,14 @@ export default function RunDetailPage() {
 
   async function sendInstruction(e: React.FormEvent) {
     e.preventDefault();
+    setInstructionError(null);
     setSendingInstruction(true);
     try {
       await api.runs.addInstruction(runId, instructionText);
       setInstructionText("");
       setTimeout(loadRun, 500);
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "Failed");
+      setInstructionError(e instanceof Error ? e.message : "Failed to send directive");
     } finally {
       setSendingInstruction(false);
     }
@@ -416,14 +418,26 @@ export default function RunDetailPage() {
       setTimeout(() => { setControlMsg(null); loadRun(); }, 2000);
     } catch (e: unknown) {
       setControlMsg(`Error: ${e instanceof Error ? e.message : "Unknown"}`);
+      setTimeout(() => setControlMsg(null), 5000);
     } finally {
       setControlling(false);
     }
   }
 
   if (loading) return <div className="text-center text-gray-500 py-20 font-light">Loading telemetry...</div>;
-  if (error) return <div className="text-center text-red-400 py-20 font-light">{error}</div>;
-  if (!run) return null;
+  if (error) return (
+    <div className="text-center text-red-400 py-20 space-y-3">
+      <p>{error}</p>
+      <button onClick={loadRun} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-all">Retry</button>
+    </div>
+  );
+  if (!run) return (
+    <div className="text-center py-20 space-y-3">
+      <span className="text-4xl inline-block">🔍</span>
+      <p className="text-gray-400">Run not found.</p>
+      <Link href="/runs" className="text-blue-400 text-sm hover:underline">Back to Runs</Link>
+    </div>
+  );
 
   const isActive = run.status === "active";
   const isPaused = run.status === "paused";
@@ -588,7 +602,7 @@ export default function RunDetailPage() {
                 )}
                 <button
                   onClick={() => {
-                    if (confirm("Force terminate this run? This will prompt final LLM summary generation.")) {
+                    if (confirm("Force terminate this run? The run will stop and a final summary will be generated.")) {
                       control("terminate");
                     }
                   }}
@@ -653,6 +667,9 @@ export default function RunDetailPage() {
             <div className="bg-gray-900/30 border border-gray-800 rounded-2xl p-5 md:p-6 space-y-4">
               <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-800 pb-2">Directives & Instructions</h3>
               <form onSubmit={sendInstruction} className="space-y-3">
+                {instructionError && (
+                  <p className="text-xs text-red-400">{instructionError}</p>
+                )}
                 <textarea
                   value={instructionText}
                   onChange={(e) => setInstructionText(e.target.value)}

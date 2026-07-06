@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS supervisors (
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Ensure event_types column exists on supervisors table for existing deployments
+ALTER TABLE supervisors ADD COLUMN IF NOT EXISTS event_types JSONB NOT NULL DEFAULT '[]';
+
 -- ─────────────────────────────────────────────
 -- Workflow runs (one per order)
 -- ─────────────────────────────────────────────

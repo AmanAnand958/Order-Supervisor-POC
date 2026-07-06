@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
+import NavLink from "@/components/NavLink";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -51,16 +52,5 @@ export default function RootLayout({
         </main>
       </body>
     </html>
-  );
-}
-
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="px-3.5 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-900/80 transition-all duration-200"
-    >
-      {children}
-    </Link>
   );
 }

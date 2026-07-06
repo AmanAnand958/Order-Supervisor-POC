@@ -26,3 +26,36 @@
 ✓ Compiled in 343ms
 ✓ Compiled in 415ms
 ✓ Compiled in 103ms
+ GET /supervisors 200 in 195ms (next.js: 25ms, application-code: 170ms)
+ GET /supervisors 200 in 198ms (next.js: 108ms, application-code: 90ms)
+ GET /supervisors 200 in 202ms (next.js: 89ms, application-code: 113ms)
+ GET /supervisors 200 in 205ms (next.js: 131ms, application-code: 74ms)
+ GET /supervisors 200 in 223ms (next.js: 164ms, application-code: 58ms)
+ GET /supervisors 200 in 280ms (next.js: 236ms, application-code: 44ms)
+ GET /supervisors 200 in 32ms (next.js: 3ms, application-code: 30ms)
+[browser] ./app/runs/[id]/page.tsx:469:21
+Expected '</', got ')'
+  467 |                         {et.type}
+  468 |                       </li>
+> 469 |                     ))}
+      |                     ^
+  470 |                   </select>
+  471 |                 </div>
+  472 |                 <div className="space-y-1">
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/runs/[id]/page.tsx [Client Component Browser]
+    ./app/runs/[id]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/runs/[id]/page.tsx [Client Component SSR]
+    ./app/runs/[id]/page.tsx [Server Component] 
+ GET / 200 in 39ms (next.js: 16ms, application-code: 23ms)
+ GET /supervisors 200 in 32ms (next.js: 5ms, application-code: 26ms)
+ GET / 200 in 26ms (next.js: 5ms, application-code: 22ms)
+ GET /supervisors 200 in 31ms (next.js: 4ms, application-code: 27ms)
+ GET /runs 200 in 33ms (next.js: 15ms, application-code: 18ms)
+ GET /supervisors 200 in 37ms (next.js: 7ms, application-code: 29ms)

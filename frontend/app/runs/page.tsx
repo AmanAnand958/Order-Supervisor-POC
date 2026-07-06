@@ -232,7 +232,7 @@ function RunsPageInner() {
       )}
 
       {/* Filter Tabs */}
-      <div className="flex gap-1.5 bg-gray-900/35 border border-gray-850 p-1 rounded-xl self-start w-fit flex-wrap">
+      <div className="flex gap-1.5 bg-gray-900/35 border border-gray-800 p-1 rounded-xl self-start w-fit flex-wrap">
         {["all", "active", "paused", "completed", "terminated"].map((s) => {
           const isActive = statusFilter === s;
           const count = s !== "all" ? statusCounts[s] ?? 0 : runs.length;
@@ -255,8 +255,9 @@ function RunsPageInner() {
       {loading ? (
         <div className="text-center text-gray-500 py-20 font-light">Loading runs...</div>
       ) : error ? (
-        <div className="text-center text-red-400 py-20 border border-red-500/10 rounded-2xl bg-red-950/10">
+        <div className="text-center text-red-400 py-20 border border-red-500/10 rounded-2xl bg-red-950/10 space-y-3">
           <p>{error}</p>
+          <button onClick={loadRuns} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-all">Retry</button>
         </div>
       ) : filteredRuns.length === 0 ? (
         <div className="text-center py-20 border border-dashed border-gray-800 rounded-2xl space-y-3">
