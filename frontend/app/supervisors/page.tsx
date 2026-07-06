@@ -36,7 +36,7 @@ function SupervisorCard({ supervisor }: { supervisor: Supervisor }) {
           </span>
         </div>
         
-        <p className="text-sm text-gray-400 leading-relaxed font-light line-clamp-3">{supervisor.base_instruction}</p>
+        <p className="text-sm text-gray-400 leading-relaxed font-light line-clamp-5">{supervisor.base_instruction}</p>
         
         <div className="flex flex-wrap gap-1.5 pt-2">
           {supervisor.tools.map((t) => (
