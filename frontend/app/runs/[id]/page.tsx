@@ -60,19 +60,182 @@ const EVENT_ICONS: Record<string, string> = {
   "tool:close_workflow": "🏁",
 };
 
+const TRIGGER_LABELS: Record<string, { label: string; icon: string; color: string }> = {
+  workflow_start: { label: "Workflow Start", icon: "🚀", color: "text-green-400 bg-green-500/10 border-green-500/20" },
+  signal: { label: "Incoming Event", icon: "📨", color: "text-blue-400 bg-blue-500/10 border-blue-500/20" },
+  scheduled_wakeup: { label: "Scheduled Wake-up", icon: "⏰", color: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20" },
+  operator_terminate: { label: "Operator Terminate", icon: "🛑", color: "text-red-400 bg-red-500/10 border-red-500/20" },
+};
+
+const TOOL_DISPLAY: Record<string, { label: string; icon: string; successMsg: string }> = {
+  send_customer_message: { label: "Customer Message Sent", icon: "📧", successMsg: "Recipient: Customer" },
+  create_internal_note: { label: "Internal Note Created", icon: "📝", successMsg: "Status: Saved" },
+  escalate_issue: { label: "Issue Escalated", icon: "🔺", successMsg: "Ticket: Created" },
+  mark_order_for_review: { label: "Order Marked for Review", icon: "🔎", successMsg: "Status: Flagged" },
+  schedule_next_wakeup: { label: "Wake-up Scheduled", icon: "⏰", successMsg: "Status: Scheduled" },
+  close_workflow: { label: "Workflow Closed", icon: "🏁", successMsg: "Status: Closed" },
+};
+
+function AgentTurnCard({ event }: { event: TimelineEvent }) {
+  const [expanded, setExpanded] = useState(false);
+  const trigger = String(event.payload.trigger || "unknown");
+  const reasoning = String(event.payload.reasoning || "");
+  const toolCalls = (event.payload.tool_calls as { tool: string; args: Record<string, unknown> }[]) || [];
+  const nextWake = event.payload.next_wake_minutes as number | undefined;
+  const triggerInfo = TRIGGER_LABELS[trigger] || { label: trigger, icon: "🤖", color: "text-gray-400 bg-gray-500/10 border-gray-500/20" };
+
+  return (
+    <div className="relative flex gap-4 pl-6 pb-6 last:pb-0 group">
+      <div className="absolute left-[11px] top-7 bottom-0 w-[2px] bg-gray-800 group-last:hidden" />
+      <div className="absolute left-0 top-1 w-6 h-6 rounded-full flex items-center justify-center text-xs bg-gray-900 border border-purple-500/40 shadow-sm shadow-purple-500/20">
+        🤖
+      </div>
+
+      <div className="flex-1 bg-gradient-to-br from-purple-950/20 to-gray-900/30 border border-purple-500/20 rounded-xl p-4 space-y-3 hover:border-purple-500/30 transition-colors">
+        {/* Header: Trigger + Timestamp */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-purple-400 font-mono">AI Decision</span>
+            <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${triggerInfo.color}`}>
+              {triggerInfo.icon} {triggerInfo.label}
+            </span>
+          </div>
+          <span className="text-[10px] text-gray-500 font-mono">
+            {new Date(event.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </span>
+        </div>
+
+        {/* Reasoning */}
+        {reasoning && (
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-bold text-purple-400/70 uppercase tracking-wider">Reasoning</span>
+            <p className="text-sm text-gray-200 leading-relaxed font-light whitespace-pre-line">{reasoning}</p>
+          </div>
+        )}
+
+        {/* Recommended Actions */}
+        {toolCalls.length > 0 && (
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-bold text-purple-400/70 uppercase tracking-wider">Recommended Actions</span>
+            <div className="space-y-1.5">
+              {toolCalls.map((tc, i) => {
+                const info = TOOL_DISPLAY[tc.tool] || { label: tc.tool, icon: "⚡", successMsg: "Done" };
+                return (
+                  <div key={i} className="flex items-center gap-2 text-sm text-gray-200">
+                    <span className="text-green-400 text-xs">✓</span>
+                    <span>{info.icon} {info.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Scheduled Wake-up */}
+        {nextWake && nextWake > 0 && (
+          <div className="flex items-center gap-2 text-xs text-gray-400 pt-1 border-t border-purple-500/10">
+            <span>⏰</span>
+            <span>Next wake-up in <span className="text-white font-bold">{nextWake} minutes</span></span>
+          </div>
+        )}
+
+        {/* Expand raw payload */}
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-[10px] font-mono text-gray-500 hover:text-gray-300 cursor-pointer block select-none"
+        >
+          {expanded ? "[hide payload]" : "[view payload]"}
+        </button>
+        {expanded && (
+          <pre className="text-[10px] bg-gray-950 border border-gray-900 rounded-xl p-3 overflow-auto text-gray-400 max-h-48 font-mono">
+            {JSON.stringify(event.payload, null, 2)}
+          </pre>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ToolCallCard({ event }: { event: TimelineEvent }) {
+  const [expanded, setExpanded] = useState(false);
+  const toolName = event.type.replace("tool:", "");
+  const info = TOOL_DISPLAY[toolName] || { label: toolName, icon: "⚡", successMsg: "Done" };
+  const result = event.payload.result as Record<string, unknown> | undefined;
+  const args = event.payload.args as Record<string, unknown> | undefined;
+  const status = result?.status as string | undefined;
+
+  return (
+    <div className="relative flex gap-4 pl-6 pb-6 last:pb-0 group">
+      <div className="absolute left-[11px] top-7 bottom-0 w-[2px] bg-gray-800 group-last:hidden" />
+      <div className="absolute left-0 top-1 w-6 h-6 rounded-full flex items-center justify-center text-xs bg-gray-900 border border-gray-850">
+        {info.icon}
+      </div>
+
+      <div className="flex-1 bg-gray-900/30 border border-gray-850/60 rounded-xl p-4 space-y-2 hover:border-gray-800 transition-colors">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-blue-400 font-mono">{info.icon} {info.label}</span>
+            {status && (
+              <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-green-500/10 text-green-400 border border-green-500/20">
+                ✓ Success
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] text-gray-500 font-mono">
+            {new Date(event.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </span>
+        </div>
+
+        {/* Tool details */}
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          {args && Object.entries(args).map(([key, val]) => (
+            <div key={key} className="flex flex-col">
+              <span className="text-[10px] text-gray-500 uppercase tracking-wider">{key.replace(/_/g, " ")}</span>
+              <span className="text-gray-200 font-light">{typeof val === "string" ? val : JSON.stringify(val)}</span>
+            </div>
+          ))}
+          {result && Object.entries(result).filter(([k]) => k !== "status").map(([key, val]) => (
+            <div key={key} className="flex flex-col">
+              <span className="text-[10px] text-gray-500 uppercase tracking-wider">{key.replace(/_/g, " ")}</span>
+              <span className="text-gray-200 font-light">{typeof val === "string" ? val : JSON.stringify(val)}</span>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-[10px] font-mono text-gray-500 hover:text-gray-300 cursor-pointer block select-none"
+        >
+          {expanded ? "[hide payload]" : "[view payload]"}
+        </button>
+        {expanded && (
+          <pre className="text-[10px] bg-gray-950 border border-gray-900 rounded-xl p-3 overflow-auto text-gray-400 max-h-48 font-mono">
+            {JSON.stringify(event.payload, null, 2)}
+          </pre>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function TimelineEntry({ event }: { event: TimelineEvent }) {
   const [expanded, setExpanded] = useState(false);
   const icon = EVENT_ICONS[event.type] ?? (event.source === "agent" ? "🤖" : "📌");
   const isAgent = event.source === "agent";
 
+  if (event.type === "agent_turn") {
+    return <AgentTurnCard event={event} />;
+  }
+
+  if (event.type.startsWith("tool:")) {
+    return <ToolCallCard event={event} />;
+  }
+
   return (
     <div className={`relative flex gap-4 pl-6 pb-6 last:pb-0 group transition-opacity duration-300 ${
       isAgent ? "opacity-95" : ""
     }`}>
-      {/* Visual vertical timeline connector */}
       <div className="absolute left-[11px] top-7 bottom-0 w-[2px] bg-gray-800 group-last:hidden" />
-      
-      {/* Icon shell */}
       <div className={`absolute left-0 top-1 w-6 h-6 rounded-full flex items-center justify-center text-xs bg-gray-900 border transition-all duration-200 ${
         isAgent 
           ? "border-purple-500/40 shadow-sm shadow-purple-500/20" 
@@ -89,7 +252,7 @@ function TimelineEntry({ event }: { event: TimelineEvent }) {
             <span className={`text-xs font-bold font-mono tracking-wide ${
               isAgent ? "text-purple-400" : "text-blue-400"
             }`}>
-              {event.type.replace("tool:", "")}
+              {event.type}
             </span>
             <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
               isAgent 
@@ -105,18 +268,6 @@ function TimelineEntry({ event }: { event: TimelineEvent }) {
             {new Date(event.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </span>
         </div>
-
-        {event.type === "agent_turn" && !!event.payload.reasoning && (
-          <p className="text-sm text-gray-300 leading-relaxed font-light">{String(event.payload.reasoning)}</p>
-        )}
-
-        {event.type.startsWith("tool:") && !!event.payload.result && (
-          <div className="text-xs bg-gray-950/60 border border-gray-900 p-2.5 rounded-lg font-mono text-gray-400">
-            {typeof event.payload.result === "string" 
-              ? event.payload.result 
-              : String((event.payload.result as Record<string, unknown>).note || JSON.stringify(event.payload.result))}
-          </div>
-        )}
 
         <button
           onClick={() => setExpanded(!expanded)}
