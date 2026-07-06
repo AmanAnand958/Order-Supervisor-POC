@@ -89,26 +89,46 @@ CREATE TRIGGER runs_updated_at
     FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
 
 -- ─────────────────────────────────────────────
--- Seed data: 2 example supervisor templates
+-- Deduplicate supervisors (keep oldest of each name)
+-- ─────────────────────────────────────────────
+DELETE FROM supervisors
+WHERE id NOT IN (
+    SELECT MIN(id) FROM supervisors GROUP BY name
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS supervisors_name_idx ON supervisors(name);
+
+-- ─────────────────────────────────────────────
+-- Seed data: 4 example supervisor templates
 -- ─────────────────────────────────────────────
 INSERT INTO supervisors (name, base_instruction, tools, wake_policy, model_config)
 VALUES
 (
     'Standard Order Supervisor',
-    'You are an order supervisor AI. Your job is to monitor this order''s lifecycle and take proactive actions when needed. 
-When payment issues occur, escalate immediately. When shipment is delayed, notify the customer and create an internal note.
-When the order is delivered, confirm with the customer. Be concise and professional.',
+    'You are an order supervisor AI. Your job is to monitor this order''s lifecycle and take proactive actions when needed. When payment issues occur, escalate immediately. When shipment is delayed, notify the customer and create an internal note. When the order is delivered, confirm with the customer. Be concise and professional.',
     '["send_customer_message", "create_internal_note", "escalate_issue", "mark_order_for_review", "schedule_next_wakeup", "close_workflow"]',
     '{"default_interval_minutes": 60, "aggressiveness": "medium"}',
     '{"model": "llama-3.3-70b-versatile", "temperature": 0.3, "max_tokens": 1024}'
 ),
 (
     'High-Priority Supervisor',
-    'You are a high-priority order supervisor. This order requires close attention. Wake frequently and act proactively.
-Any shipment delay must be escalated immediately. Payment failures require urgent customer communication.
-Mark any unusual patterns for review. Keep the customer informed at every step.',
+    'You are a high-priority order supervisor. This order requires close attention. Wake frequently and act proactively. Any shipment delay must be escalated immediately. Payment failures require urgent customer communication. Mark any unusual patterns for review. Keep the customer informed at every step.',
     '["send_customer_message", "create_internal_note", "escalate_issue", "mark_order_for_review", "schedule_next_wakeup", "close_workflow"]',
     '{"default_interval_minutes": 15, "aggressiveness": "high"}',
     '{"model": "llama-3.3-70b-versatile", "temperature": 0.2, "max_tokens": 1024}'
+),
+(
+    'Returns Supervisor',
+    'You are a returns and refunds specialist. Your job is to handle return requests efficiently and fairly. When a return is requested, verify the reason, approve or deny based on policy, and communicate the decision clearly. Track return shipments and process refunds promptly. Escalate any fraudulent return patterns.',
+    '["send_customer_message", "create_internal_note", "escalate_issue", "mark_order_for_review", "schedule_next_wakeup", "close_workflow"]',
+    '{"default_interval_minutes": 30, "aggressiveness": "medium"}',
+    '{"model": "llama-3.3-70b-versatile", "temperature": 0.3, "max_tokens": 1024}'
+),
+(
+    'VIP Customer Supervisor',
+    'You are a VIP customer order supervisor. This customer is high-value and expects premium service. Proactive communication is critical — update them before they have to ask. Any issue must be resolved with highest priority. Offer compensation for inconveniences. Escalate any problem immediately to management.',
+    '["send_customer_message", "create_internal_note", "escalate_issue", "mark_order_for_review", "schedule_next_wakeup", "close_workflow"]',
+    '{"default_interval_minutes": 10, "aggressiveness": "high"}',
+    '{"model": "llama-3.3-70b-versatile", "temperature": 0.2, "max_tokens": 1024}'
 )
-ON CONFLICT DO NOTHING;
+ON CONFLICT (name) DO NOTHING;
