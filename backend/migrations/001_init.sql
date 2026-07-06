@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS supervisors (
     name            TEXT NOT NULL,
     base_instruction TEXT NOT NULL,
     tools           JSONB NOT NULL DEFAULT '[]',       -- list of enabled tool names
+    event_types     JSONB NOT NULL DEFAULT '[]',       -- relevant event types for this supervisor
     wake_policy     JSONB NOT NULL DEFAULT '{}',       -- default_interval_minutes, aggressiveness
     model_config    JSONB NOT NULL DEFAULT '{}',       -- model, temperature, max_tokens
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -101,12 +102,13 @@ CREATE UNIQUE INDEX IF NOT EXISTS supervisors_name_idx ON supervisors(name);
 -- ─────────────────────────────────────────────
 -- Seed data: 4 example supervisor templates
 -- ─────────────────────────────────────────────
-INSERT INTO supervisors (name, base_instruction, tools, wake_policy, model_config)
+INSERT INTO supervisors (name, base_instruction, tools, event_types, wake_policy, model_config)
 VALUES
 (
     'Standard Order Supervisor',
     'You are an order supervisor AI. Your job is to monitor this order''s lifecycle and take proactive actions when needed. When payment issues occur, escalate immediately. When shipment is delayed, notify the customer and create an internal note. When the order is delivered, confirm with the customer. Be concise and professional.',
     '["send_customer_message", "create_internal_note", "escalate_issue", "mark_order_for_review", "schedule_next_wakeup", "close_workflow"]',
+    '["order_created", "payment_confirmed", "payment_failed", "shipment_created", "shipment_delayed", "out_for_delivery", "delivered", "customer_message_received"]',
     '{"default_interval_minutes": 60, "aggressiveness": "medium"}',
     '{"model": "llama-3.3-70b-versatile", "temperature": 0.3, "max_tokens": 1024}'
 ),
@@ -114,6 +116,7 @@ VALUES
     'High-Priority Supervisor',
     'You are a high-priority order supervisor. This order requires close attention. Wake frequently and act proactively. Any shipment delay must be escalated immediately. Payment failures require urgent customer communication. Mark any unusual patterns for review. Keep the customer informed at every step.',
     '["send_customer_message", "create_internal_note", "escalate_issue", "mark_order_for_review", "schedule_next_wakeup", "close_workflow"]',
+    '["order_created", "payment_confirmed", "payment_failed", "shipment_created", "shipment_delayed", "shipment_lost", "fraud_flag", "customer_message_received"]',
     '{"default_interval_minutes": 15, "aggressiveness": "high"}',
     '{"model": "llama-3.3-70b-versatile", "temperature": 0.2, "max_tokens": 1024}'
 ),
@@ -121,6 +124,7 @@ VALUES
     'Returns Supervisor',
     'You are a returns and refunds specialist. Your job is to handle return requests efficiently and fairly. When a return is requested, verify the reason, approve or deny based on policy, and communicate the decision clearly. Track return shipments and process refunds promptly. Escalate any fraudulent return patterns.',
     '["send_customer_message", "create_internal_note", "escalate_issue", "mark_order_for_review", "schedule_next_wakeup", "close_workflow"]',
+    '["refund_requested", "refund_approved", "refund_rejected", "customer_complaint_filed", "customer_message_received", "order_cancelled"]',
     '{"default_interval_minutes": 30, "aggressiveness": "medium"}',
     '{"model": "llama-3.3-70b-versatile", "temperature": 0.3, "max_tokens": 1024}'
 ),
@@ -128,6 +132,7 @@ VALUES
     'VIP Customer Supervisor',
     'You are a VIP customer order supervisor. This customer is high-value and expects premium service. Proactive communication is critical — update them before they have to ask. Any issue must be resolved with highest priority. Offer compensation for inconveniences. Escalate any problem immediately to management.',
     '["send_customer_message", "create_internal_note", "escalate_issue", "mark_order_for_review", "schedule_next_wakeup", "close_workflow"]',
+    '["order_created", "payment_confirmed", "payment_failed", "shipment_created", "shipment_delayed", "shipment_lost", "delivered", "customer_message_received", "customer_complaint_filed", "fraud_flag"]',
     '{"default_interval_minutes": 10, "aggressiveness": "high"}',
     '{"model": "llama-3.3-70b-versatile", "temperature": 0.2, "max_tokens": 1024}'
 )

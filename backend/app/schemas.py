@@ -28,6 +28,7 @@ class SupervisorCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     base_instruction: str = Field(..., min_length=1)
     tools: list[str] = Field(default_factory=list)
+    event_types: list[str] = Field(default_factory=list)
     wake_policy: WakePolicy = Field(default_factory=WakePolicy)
     model_config_: ModelConfig = Field(default_factory=ModelConfig, alias="model_config")
 

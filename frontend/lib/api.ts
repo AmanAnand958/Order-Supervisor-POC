@@ -7,6 +7,7 @@ export interface Supervisor {
   name: string;
   base_instruction: string;
   tools: string[];
+  event_types: string[];
   wake_policy: {
     default_interval_minutes: number;
     aggressiveness: "low" | "medium" | "high";

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { api, RunDetail, EventType, TimelineEvent } from "@/lib/api";
+import { api, RunDetail, TimelineEvent } from "@/lib/api";
 
 const STATUS_COLORS: Record<string, { badge: string; text: string; dot: string }> = {
   active: {
@@ -313,7 +313,7 @@ export default function RunDetailPage() {
   const runId = params.id as string;
 
   const [run, setRun] = useState<RunDetail | null>(null);
-  const [eventTypes, setEventTypes] = useState<EventType[]>([]);
+  const [supervisorEventTypes, setSupervisorEventTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -338,6 +338,12 @@ export default function RunDetailPage() {
     try {
       const data = await api.runs.get(runId);
       setRun(data);
+      // Fetch supervisor to get event_types
+      if (data.supervisor_id) {
+        api.supervisors.get(data.supervisor_id).then((s) => {
+          setSupervisorEventTypes(s.event_types || []);
+        }).catch(() => {});
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to load run");
     } finally {
@@ -347,7 +353,6 @@ export default function RunDetailPage() {
 
   useEffect(() => {
     loadRun();
-    api.eventTypes().then(setEventTypes).catch(() => {});
   }, [loadRun]);
 
   // Poll every 3 seconds if active
@@ -613,12 +618,15 @@ export default function RunDetailPage() {
                     className="w-full bg-gray-950 border border-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3 py-2.5 text-white text-xs font-medium transition-all"
                   >
                     <option value="">Select event...</option>
-                    {eventTypes.map((et) => (
-                      <option key={et.type} value={et.type}>
-                        {et.type}
+                    {supervisorEventTypes.map((et) => (
+                      <option key={et} value={et}>
+                        {et}
                       </option>
                     ))}
                   </select>
+                  {supervisorEventTypes.length > 0 && (
+                    <p className="text-[10px] text-gray-600 font-mono">{supervisorEventTypes.length} events available for this supervisor</p>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Payload Parameters (JSON)</label>

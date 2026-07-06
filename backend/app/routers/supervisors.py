@@ -29,6 +29,7 @@ def _row_to_supervisor(row) -> dict:
         "name": row["name"],
         "base_instruction": row["base_instruction"],
         "tools": json.loads(row["tools"]) if isinstance(row["tools"], str) else row["tools"],
+        "event_types": json.loads(row["event_types"]) if isinstance(row["event_types"], str) else row["event_types"],
         "wake_policy": json.loads(row["wake_policy"]) if isinstance(row["wake_policy"], str) else row["wake_policy"],
         "model_config": json.loads(row["model_config"]) if isinstance(row["model_config"], str) else row["model_config"],
         "created_at": row["created_at"].isoformat() if row["created_at"] else None,
@@ -72,13 +73,14 @@ async def create_supervisor(body: SupervisorCreate, request: Request):
 
     row = await db.fetchrow(
         """
-        INSERT INTO supervisors (name, base_instruction, tools, wake_policy, model_config)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO supervisors (name, base_instruction, tools, event_types, wake_policy, model_config)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *
         """,
         body.name,
         body.base_instruction,
         json.dumps(body.tools),
+        json.dumps(body.event_types),
         json.dumps(wake_policy),
         json.dumps(model_cfg),
     )
