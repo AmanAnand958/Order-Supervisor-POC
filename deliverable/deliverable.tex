@@ -1,0 +1,105 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{graphicx}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+}
+
+\title{\textbf{Order Supervisor POC} \\ \large Deliverables Package}
+\author{Aman Anand}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Project Overview}
+
+A long-running AI supervisor that oversees a single e-commerce order from creation to completion. An LLM agent (Llama 3.3 via Groq API) is orchestrated by a Temporal workflow, wakes up on schedule or important events, and takes actions like sending messages, creating notes, or escalating issues. A Next.js dashboard lets operators inject events, add instructions, and monitor the agent in real-time.
+
+\section*{Deliverables}
+
+\subsection*{1. Source Code}
+The full source code is available in the GitHub repository:
+
+\url{https://github.com/AmanAnand958/Order-Supervisor-POC}
+
+\noindent Repository structure:
+\begin{itemize}[nosep]
+    \item \texttt{backend/} — Python 3.12 + FastAPI + Temporal worker + PostgreSQL
+    \item \texttt{frontend/} — Next.js 16 + React 19 + Tailwind CSS 4 + TypeScript
+    \item \texttt{docker-compose.yml} — Local development (Postgres + Temporal)
+    \item \texttt{docker-compose.prod.yml} — Production deployment
+\end{itemize}
+
+\subsection*{2. README with Setup Instructions}
+Detailed setup instructions are provided in \texttt{README.md} within the repository, covering:
+\begin{itemize}[nosep]
+    \item Prerequisites (Docker, Python 3.12+, Node.js 20+, Groq API key)
+    \item Step-by-step local development setup (7 steps)
+    \item End-to-end usage flow
+    \item Key commands reference
+\end{itemize}
+
+\subsection*{3. Architecture Note}
+A comprehensive architecture document is provided in \texttt{ARCHITECTURE.md}, covering:
+\begin{itemize}[nosep]
+    \item Temporal workflow design (signals, queries, main loop)
+    \item Sleep/wake mechanism with configurable aggressiveness
+    \item Deterministic event severity classifier (no LLM calls)
+    \item Rolling memory compaction approach
+    \item Activity architecture (6 activities)
+    \item Database role and live state querying
+    \item Key tradeoffs given the POC scope
+\end{itemize}
+
+\subsection*{4. Walkthrough Video}
+A walkthrough video demonstrating the product is available at:
+
+\vspace{0.5em}
+\noindent\textbf{[VIDEO LINK — TO BE INSERTED]}
+
+\vspace{0.5em}
+\noindent The video demonstrates:
+\begin{enumerate}[nosep]
+    \item Creating a supervisor configuration
+    \item Starting an order run
+    \item Sending events into the workflow
+    \item The agent going to sleep and waking up on important events
+    \item Tool execution (send message, create note, escalate issue)
+    \item Adding extra instructions to a live run
+    \item Interrupting and resuming a run
+    \item Final summary, learnings, and recommendations
+\end{enumerate}
+
+\section*{Tech Stack}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Layer} & \textbf{Technology} \\
+\midrule
+Orchestration & Temporal (Python SDK) \\
+Backend API & Python 3.12 + FastAPI + asyncpg \\
+LLM Runtime & Groq API (llama-3.3-70b-versatile) \\
+Database & PostgreSQL 16 \\
+Frontend & Next.js 16 + React 19 + Tailwind CSS 4 + TypeScript \\
+Containerization & Docker + Docker Compose \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section*{Links}
+
+\begin{itemize}[nosep]
+    \item GitHub: \url{https://github.com/AmanAnand958/Order-Supervisor-POC}
+    \item Walkthrough Video: \textbf{[VIDEO LINK — TO BE INSERTED]}
+\end{itemize}
+
+\end{document}
