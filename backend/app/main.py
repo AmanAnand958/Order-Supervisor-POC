@@ -48,10 +48,18 @@ app = FastAPI(
 )
 
 # CORS — allow Next.js dev server and production frontend
-CORS_ORIGINS = os.environ.get(
-    "CORS_ORIGINS",
-    "http://localhost:3000,http://localhost:3001,https://order-supervisor-poc.vercel.app",
-).split(",")
+CORS_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://order-supervisor-poc.vercel.app",
+]
+
+env_origins = os.environ.get("CORS_ORIGINS")
+if env_origins:
+    for origin in env_origins.split(","):
+        trimmed = origin.strip()
+        if trimmed and trimmed not in CORS_ORIGINS:
+            CORS_ORIGINS.append(trimmed)
 
 app.add_middleware(
     CORSMiddleware,
