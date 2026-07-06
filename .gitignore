@@ -1,1 +1,10 @@
 backend/.env
+backend/temporal.db
+backend/server.log
+backend/worker.log
+backend/__pycache__/
+backend/**/__pycache__/
+*.pyc
+.DS_Store
+frontend/.next/
+frontend/node_modules/
