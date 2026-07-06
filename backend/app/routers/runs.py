@@ -199,6 +199,9 @@ async def send_event(run_id: UUID, body: EventPayload, request: Request):
             {"event_type": body.event_type, "payload": body.payload},
         )
     except RPCError as exc:
+        if "not found" in str(exc).lower():
+            await db.execute("UPDATE runs SET status = 'terminated' WHERE id = $1", str(run_id))
+            raise HTTPException(status_code=404, detail="Workflow not found — run has been marked as terminated. Start a new run.")
         raise HTTPException(status_code=500, detail=f"Signal failed: {exc}")
 
     return {"status": "accepted", "event_type": body.event_type}
@@ -227,6 +230,9 @@ async def add_instruction(run_id: UUID, body: InstructionPayload, request: Reque
     try:
         await handle.signal(OrderSupervisorWorkflow.add_instruction, body.text)
     except RPCError as exc:
+        if "not found" in str(exc).lower():
+            await db.execute("UPDATE runs SET status = 'terminated' WHERE id = $1", str(run_id))
+            raise HTTPException(status_code=404, detail="Workflow not found — run has been marked as terminated. Start a new run.")
         raise HTTPException(status_code=500, detail=f"Signal failed: {exc}")
 
     return {"status": "accepted", "text": body.text}
@@ -243,7 +249,13 @@ async def interrupt_run(run_id: UUID, request: Request):
 
     await db.execute("UPDATE runs SET status = 'paused' WHERE id = $1", str(run_id))
     handle = temporal.get_workflow_handle(f"order-{row['order_id']}")
-    await handle.signal(OrderSupervisorWorkflow.interrupt)
+    try:
+        await handle.signal(OrderSupervisorWorkflow.interrupt)
+    except RPCError as exc:
+        if "not found" in str(exc).lower():
+            await db.execute("UPDATE runs SET status = 'terminated' WHERE id = $1", str(run_id))
+            raise HTTPException(status_code=404, detail="Workflow not found — run has been marked as terminated. Start a new run.")
+        raise HTTPException(status_code=500, detail=f"Signal failed: {exc}")
     return {"status": "accepted"}
 
 
@@ -258,7 +270,13 @@ async def resume_run(run_id: UUID, request: Request):
 
     await db.execute("UPDATE runs SET status = 'active' WHERE id = $1", str(run_id))
     handle = temporal.get_workflow_handle(f"order-{row['order_id']}")
-    await handle.signal(OrderSupervisorWorkflow.resume)
+    try:
+        await handle.signal(OrderSupervisorWorkflow.resume)
+    except RPCError as exc:
+        if "not found" in str(exc).lower():
+            await db.execute("UPDATE runs SET status = 'terminated' WHERE id = $1", str(run_id))
+            raise HTTPException(status_code=404, detail="Workflow not found — run has been marked as terminated. Start a new run.")
+        raise HTTPException(status_code=500, detail=f"Signal failed: {exc}")
     return {"status": "accepted"}
 
 
@@ -272,5 +290,11 @@ async def terminate_run(run_id: UUID, request: Request):
         raise HTTPException(status_code=404, detail="Run not found")
 
     handle = temporal.get_workflow_handle(f"order-{row['order_id']}")
-    await handle.signal(OrderSupervisorWorkflow.terminate)
+    try:
+        await handle.signal(OrderSupervisorWorkflow.terminate)
+    except RPCError as exc:
+        if "not found" in str(exc).lower():
+            await db.execute("UPDATE runs SET status = 'terminated' WHERE id = $1", str(run_id))
+            raise HTTPException(status_code=404, detail="Workflow not found — run has been marked as terminated.")
+        raise HTTPException(status_code=500, detail=f"Signal failed: {exc}")
     return {"status": "accepted"}
